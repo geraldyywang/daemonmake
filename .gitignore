@@ -37,8 +37,12 @@
 *.out
 *.app
 
-# debug information files
+# Debug information files
 *.dwo
 
-# build folder
+# Build folder and settings
 build/
+.vscode/
+
+# CMake
+CMakeUserPresets.json
