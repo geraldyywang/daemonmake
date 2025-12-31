@@ -66,12 +66,12 @@ namespace daemonmake {
     }
 
     Config load_config(const std::filesystem::path& project_root) {
-        json cfg_json { load_json(project_root / config_default_location) };
+        json cfg_json(load_json(project_root / config_default_location));
         return cfg_json.get<Config>();
     }
 
     void save_config(const Config& cfg) {
-        json j { cfg };
+        json j(cfg);
         save_json(cfg.project_root / config_default_location, j);
     }
 
