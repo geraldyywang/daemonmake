@@ -10,8 +10,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::string cmd = argv[1];
-    std::string root = (argc >= 3) ? argv[2] : std::string{};
+    std::string cmd { argv[1] };
+    std::string root { (argc >= 3) ? argv[2] : std::string{} };
 
     if (cmd == "init")   return run_init(root);
     if (cmd == "status") return run_status(root);
