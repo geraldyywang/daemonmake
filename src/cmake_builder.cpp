@@ -28,15 +28,6 @@ std::string extract_cxx_standard_number(const std::string& standard) {
     return digits;
 }
 
-// Helper: choose a CMake project name from the project root path.
-std::string derive_project_name(const fs::path& root) {
-    if (root.has_filename()) {
-        auto name = root.filename().string();
-        if (!name.empty()) return name;
-    }
-    return "daemonmake_project";
-}
-
 }  // namespace
 
 
@@ -76,7 +67,7 @@ int cmake_build(const Config& cfg) {
 
 
 void write_cmakelists(const Config& cfg, const ProjectLayout& pl, bool overwrite) {
-    const fs::path cmake_path = cfg.project_root / "CMakeLists.txt";
+    const fs::path cmake_path { cfg.project_root / "CMakeLists.txt" };
 
     if (fs::exists(cmake_path) && !overwrite) {
         throw std::runtime_error(
@@ -86,11 +77,10 @@ void write_cmakelists(const Config& cfg, const ProjectLayout& pl, bool overwrite
 
     std::ostringstream oss;
 
-    const std::string project_name = derive_project_name(cfg.project_root);
-    const std::string cxx_std_num  = extract_cxx_standard_number(cfg.cxx_standard);
+    const std::string cxx_std_num { extract_cxx_standard_number(cfg.cxx_standard) };
 
     oss << "cmake_minimum_required(VERSION 3.20)\n";
-    oss << "project(" << project_name << " LANGUAGES CXX)\n\n";
+    oss << "project(" << pl.project_name << " LANGUAGES CXX)\n\n";
 
     oss << "set(CMAKE_CXX_STANDARD " << cxx_std_num << ")\n";
     oss << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
