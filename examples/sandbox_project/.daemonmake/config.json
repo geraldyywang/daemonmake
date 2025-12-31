@@ -1,0 +1,9 @@
+{
+    "apps_folder_name": "apps",
+    "build_directory": "/home/geraldyywang/daemonmake/examples/sandbox_project/build",
+    "compiler": "g++",
+    "cxx_standard": "c++20",
+    "include_folder_name": "include",
+    "project_root": "/home/geraldyywang/daemonmake/examples/sandbox_project",
+    "source_folder_name": "src"
+}
