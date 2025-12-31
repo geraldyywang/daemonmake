@@ -24,6 +24,7 @@ int Daemon::run() {
     while(true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+        // TODO: need to check for new folders/libs added or deleted
         auto changed { get_changed_files() };
         if (!changed.empty()) {
             std::cout << "[daemonmake] Detected " << changed.size() << " changed file(s). Rebuilding...\n";

@@ -18,6 +18,6 @@ int main(int argc, char** argv) {
     if (cmd == "build")  return run_build(root);
     if (cmd == "daemon") return run_daemon(root);
 
-    std::cerr << "Unknown command: " << cmd << '\n';
+    std::cerr << "Unknown command: " << cmd << std::endl;
     return 1;
 }
