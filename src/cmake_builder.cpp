@@ -52,13 +52,23 @@ int cmake_build(const Config& cfg) {
     }
 
     const std::string configure_cmd { 
-        "cmake -S \"" + cfg.project_root.string() + "\" -B \"" + cfg.build_directory.string() + "\"" 
+        "cmake -S " + cfg.project_root.string() + " -B " + cfg.build_directory.string() 
     };
 
     std::cout << "[daemonmake] " << configure_cmd << '\n';
     int rc { std::system(configure_cmd.c_str()) };
     if (rc != 0) {
         std::cerr << "daemonmake build: CMake configuration failed (rc=" << rc << ")\n";
+    }
+
+    const std::string build_cmd {
+        "cmake --build " + cfg.build_directory.string()
+    };
+
+    std::cout << "[daemonmake] " << build_cmd << '\n';
+    rc = std::system(build_cmd.c_str());
+    if (rc != 0) {
+        std::cerr << "daemonmake build: CMake build failed (rc=" << rc << ")\n";
     }
 
     return rc;
