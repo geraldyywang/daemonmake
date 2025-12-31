@@ -1,6 +1,7 @@
 #include "daemonmake/project.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <unordered_set>
 
 namespace daemonmake {
@@ -39,12 +40,11 @@ std::vector<std::string> parse_includes(const fs::path& file_path) {
 }  // namespace
 
 ProjectLayout make_project_layout(const std::filesystem::path& project_root) {
-    return { fs::canonical(project_root), {} };
+    return { project_root.filename().string(), fs::canonical(project_root), {} };
 }
 
 void discover_targets(ProjectLayout& pl) {
     // If there are files that are not in a subfolder, group them into unnamed target as a lib
-    // Handle every subfolder in src, every file within is a lib
     Target files_not_grouped { 
         std::string{default_lib_name}, 
         TargetType::Library, 
@@ -79,7 +79,7 @@ void discover_targets(ProjectLayout& pl) {
         }
     }
 
-    const auto include_path { pl.project_root / default_include_folder_name };
+    const auto include_path { pl.project_root / default_include_folder_name / pl.project_name };
     if (fs::exists(include_path)) {
         for (const auto& entry : fs::directory_iterator(include_path)) {
             if (fs::is_directory(entry)) continue;

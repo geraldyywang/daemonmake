@@ -26,6 +26,7 @@ struct Target {
 };
 
 struct ProjectLayout {
+    std::string project_name;
     std::filesystem::path project_root;
     std::vector<Target> targets;
 };
