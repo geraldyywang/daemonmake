@@ -6,24 +6,32 @@
 
 namespace daemonmake {
 
-int cmake_build(const Config& cfg);
+/**
+ * Configures and builds the project via CMake.
+ *
+ * Ensures the build directory exists, generates a CMakeLists.txt if missing,
+ * runs a CMake configure step, then builds the project. Returns the exit code
+ * from the build command. Does not throw on configuration or build failures.
+ *
+ * @param cfg Project configuration, including project_root and build_directory.
+ * @param pl  Project layout used when generating CMakeLists.txt.
+ * @return Exit code of the CMake build command.
+ */
+int cmake_build(const Config& cfg, const ProjectLayout& pl);
 
 /**
- * Generate a CMakeLists.txt for the given project.
- * This inspects the discovered targets in `ProjectLayout` and emits a
- * minimal, modern CMake file that:
- * - sets the project name and C++ standard,
- * - defines one `add_library` / `add_executable` per target,
- * - wires up `target_link_libraries` according to inferred dependencies.
- * 
- * The CMakeLists.txt is written to `<cfg.project_root>/CMakeLists.txt`.
- * By default, this function refuses to overwrite an existing file unless
- * `overwrite` is set to true. This is to avoid clobbering any hand-written
- * CMake project that may already exist in the tree.
- * 
- * Throws `std::runtime_error` on I/O errors.
+ * Writes a CMakeLists.txt file for the given project configuration and layout.
+ *
+ * Generates target definitions, include paths, compiler settings, and
+ * inter-target dependencies. If a CMakeLists.txt already exists and overwrite
+ * is false, throws std::runtime_error. Also throws on I/O errors.
+ *
+ * @param cfg        Project configuration.
+ * @param pl         Discovered project layout.
+ * @param overwrite  Whether to overwrite an existing CMakeLists.txt.
  */
-void write_cmakelists(const Config& cfg, const ProjectLayout& pl, bool overwrite = false);
+void write_cmakelists(const Config& cfg, const ProjectLayout& pl,
+                      bool overwrite = false);
 
 }  // namespace daemonmake
 
