@@ -11,7 +11,7 @@ namespace daemonmake {
 namespace fs = std::filesystem;
 
 Daemon::Daemon(const Config& cfg) : cfg_ {cfg}, pl_ { make_project_layout(cfg.project_root) } {
-    discover_targets(pl_);
+    discover_targets(cfg_, pl_);
     infer_target_dependencies(pl_);
 }
 
@@ -78,7 +78,7 @@ std::vector<fs::path> Daemon::get_changed_files() {
 }
 
 int Daemon::rebuild_all() {
-    discover_targets(pl_);
+    discover_targets(cfg_, pl_);
     infer_target_dependencies(pl_);
     return cmake_build(cfg_, pl_);
 }

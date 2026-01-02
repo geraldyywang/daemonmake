@@ -59,7 +59,7 @@ int run_init(const std::string& root_arg) {
         save_config(cfg);
 
         ProjectLayout pl { make_project_layout(cfg.project_root) };
-        discover_targets(pl);
+        discover_targets(cfg, pl);
         infer_target_dependencies(pl);
 
         print_project_summary(cfg, pl);
@@ -77,7 +77,7 @@ int run_status(const std::string& root_arg) {
         Config cfg { load_config(resolved_root) };
         
         ProjectLayout pl { make_project_layout(cfg.project_root) };
-        discover_targets(pl);
+        discover_targets(cfg, pl);
         infer_target_dependencies(pl);
 
         print_project_summary(cfg, pl);
@@ -95,11 +95,12 @@ int run_build(const std::string& root_arg) {
         Config cfg { load_config(resolved_root) };
 
         ProjectLayout pl { make_project_layout(cfg.project_root) };
-        discover_targets(pl);
+        discover_targets(cfg, pl);
         infer_target_dependencies(pl);
 
         return cmake_build(cfg, pl);
     } catch (const std::exception& ex) {
+        std::cerr << "daemonmake build failed: " << ex.what() << '\n';
         return 1;
     }
 }
@@ -111,11 +112,9 @@ int run_daemon(const std::string& root_arg) {
         Config cfg { load_config(resolved_root) };
 
         Daemon dmon { cfg };
-
-        dmon.run();
-
-        return 0;
+        return dmon.run();
     } catch (const std::exception& ex) {
+        std::cerr << "daemonmake daemon failed: " << ex.what() << '\n';
         return 1;
     }
 }

@@ -8,9 +8,6 @@
 
 namespace daemonmake {
 
-inline constexpr std::string_view default_source_folder_name { "src" };
-inline constexpr std::string_view default_apps_folder_name { "apps" };
-inline constexpr std::string_view default_include_folder_name { "include" };
 inline constexpr std::string_view default_lib_name { "UnnamedLib" };
 
 enum class TargetType { Library, Executable };
@@ -59,7 +56,7 @@ ProjectLayout make_project_layout(const std::filesystem::path& project_root);
  *
  * Assumes pl.project_root and pl.project_name are already initialized.
  */
-void discover_targets(ProjectLayout& pl);
+void discover_targets(const Config& cfg, ProjectLayout& pl);
 
 /**
  * Infers inter-target dependencies by parsing #include directives in each

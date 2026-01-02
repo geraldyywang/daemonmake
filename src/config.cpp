@@ -1,7 +1,5 @@
 #include "daemonmake/config.hpp"
 
-#include "daemonmake/project.hpp"
-
 #include <fstream>
 #include <iomanip>
 #include <nlohmann/json.hpp>

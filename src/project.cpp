@@ -1,5 +1,7 @@
 #include "daemonmake/project.hpp"
 
+#include "daemonmake/config.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
@@ -43,7 +45,7 @@ ProjectLayout make_project_layout(const std::filesystem::path& project_root) {
     return { project_root.filename().string(), fs::canonical(project_root), {} };
 }
 
-void discover_targets(ProjectLayout& pl) {
+void discover_targets(const Config& cfg, ProjectLayout& pl) {
     // If there are files that are not in a subfolder, group them into unnamed target as a lib
     Target files_not_grouped { 
         std::string{default_lib_name}, 
@@ -53,7 +55,7 @@ void discover_targets(ProjectLayout& pl) {
         {}
     };
     
-    const auto src_path { pl.project_root / default_source_folder_name };
+    const auto src_path { pl.project_root / cfg.source_folder_name };
     if (fs::exists(src_path)) {
         for (const auto& entry : fs::directory_iterator(src_path)) {
             if (fs::is_directory(entry)) {
@@ -79,7 +81,7 @@ void discover_targets(ProjectLayout& pl) {
         }
     }
 
-    const auto include_path { pl.project_root / default_include_folder_name / pl.project_name };
+    const auto include_path { pl.project_root / cfg.include_folder_name / pl.project_name };
     if (fs::exists(include_path)) {
         for (const auto& entry : fs::directory_iterator(include_path)) {
             if (fs::is_directory(entry)) continue;
@@ -107,7 +109,7 @@ void discover_targets(ProjectLayout& pl) {
     if (!files_not_grouped.source_files.empty() || !files_not_grouped.header_files.empty())
         pl.targets.push_back(std::move(files_not_grouped));
 
-    const auto apps_path { pl.project_root / default_apps_folder_name };
+    const auto apps_path { pl.project_root / cfg.apps_folder_name };
     if (fs::exists(apps_path)) {
         for (const auto& entry : fs::directory_iterator(apps_path)) {
             if (!fs::is_regular_file(entry) || entry.path().extension() != ".cpp") continue;

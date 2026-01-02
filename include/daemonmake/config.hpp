@@ -6,6 +6,9 @@
 
 namespace daemonmake {
 
+inline constexpr std::string_view default_source_folder_name { "src" };
+inline constexpr std::string_view default_apps_folder_name { "apps" };
+inline constexpr std::string_view default_include_folder_name { "include" };
 inline constexpr std::string_view config_default_location { ".daemonmake/config.json" };
 
 /**
