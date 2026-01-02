@@ -40,6 +40,19 @@ int run_status(const std::string& root_arg);
 int run_build(const std::string& root_arg);
 
 /**
+ * Generates a CMakeLists.txt for the project without building it.
+ *
+ * Loads the project configuration, discovers targets and dependencies,
+ * and writes a CMakeLists.txt into the project root. Fails if a
+ * CMakeLists.txt already exists unless overwriting is allowed by the
+ * underlying writer.
+ *
+ * @param root_arg Project root path. If empty, uses the current directory.
+ * @return 0 on success, non-zero on failure.
+ */
+int run_generate_cmake(const std::string& root_arg);
+
+/**
  * Runs the daemon in the foreground for the given project.
  *
  * Loads the config, constructs a Daemon, and enters its main loop. This
@@ -49,6 +62,7 @@ int run_build(const std::string& root_arg);
  * @return 0 on clean exit, 1 if an exception is thrown.
  */
 int run_daemon(const std::string& root_arg);
+
 
 }  // namespace daemonmake
 

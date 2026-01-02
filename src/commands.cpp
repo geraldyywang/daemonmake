@@ -105,6 +105,23 @@ int run_build(const std::string& root_arg) {
     }
 }
 
+int run_generate_cmake(const std::string& root_arg) {
+    try {
+        fs::path resolved_root { resolve_root(root_arg) };
+        Config cfg { load_config(resolved_root) };
+
+        ProjectLayout pl { make_project_layout(cfg.project_root) };
+        discover_targets(cfg, pl);
+        infer_target_dependencies(pl);
+
+        write_cmakelists(cfg, pl);
+        return 0;
+    } catch (const std::exception& ex) {
+        std::cerr << "daemonmake gencmake failed: " << ex.what() << '\n';
+        return 1;
+    }
+}
+
 int run_daemon(const std::string& root_arg) {
     // Constantly running?
     try {
