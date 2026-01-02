@@ -78,7 +78,9 @@ std::vector<fs::path> Daemon::get_changed_files() {
 }
 
 int Daemon::rebuild_all() {
-    return cmake_build(cfg_);
+    discover_targets(pl_);
+    infer_target_dependencies(pl_);
+    return cmake_build(cfg_, pl_);
 }
 
 int Daemon::rebuild_changed() {

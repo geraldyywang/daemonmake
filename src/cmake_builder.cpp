@@ -31,14 +31,10 @@ std::string extract_cxx_standard_number(const std::string& standard) {
 }  // namespace
 
 
-int cmake_build(const Config& cfg) {
+int cmake_build(const Config& cfg, const ProjectLayout& pl) {
     fs::create_directories(cfg.build_directory);
 
     if (!fs::exists(cfg.project_root / "CMakeLists.txt")) {
-        ProjectLayout pl { make_project_layout(cfg.project_root) };
-        discover_targets(pl);
-        infer_target_dependencies(pl);
-
         write_cmakelists(cfg, pl);
     }
 

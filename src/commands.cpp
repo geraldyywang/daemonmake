@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 namespace {
 
 fs::path resolve_root(const std::string& root_arg) {
-    fs::path root { root_arg.empty() ? fs::current_path() : fs::path{root_arg } };
+    fs::path root { root_arg.empty() ? fs::current_path() : fs::path{root_arg} };
     return fs::canonical(root);
 }
 
@@ -93,7 +93,12 @@ int run_build(const std::string& root_arg) {
     try {
         fs::path resolved_root { resolve_root(root_arg) };
         Config cfg { load_config(resolved_root) };
-        return cmake_build(cfg);
+
+        ProjectLayout pl { make_project_layout(cfg.project_root) };
+        discover_targets(pl);
+        infer_target_dependencies(pl);
+
+        return cmake_build(cfg, pl);
     } catch (const std::exception& ex) {
         return 1;
     }
