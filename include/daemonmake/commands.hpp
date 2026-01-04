@@ -63,7 +63,6 @@ int run_generate_cmake(const std::string& root_arg);
  */
 int run_daemon(const std::string& root_arg);
 
-
 }  // namespace daemonmake
 
 #endif

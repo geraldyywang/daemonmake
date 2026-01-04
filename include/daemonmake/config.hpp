@@ -1,15 +1,16 @@
 #ifndef DAEMONMAKE__DAEMONMAKE_CONFIG
 #define DAEMONMAKE__DAEMONMAKE_CONFIG
 
-#include <string>
 #include <filesystem>
+#include <string>
 
 namespace daemonmake {
 
-inline constexpr std::string_view default_source_folder_name { "src" };
-inline constexpr std::string_view default_apps_folder_name { "apps" };
-inline constexpr std::string_view default_include_folder_name { "include" };
-inline constexpr std::string_view config_default_location { ".daemonmake/config.json" };
+inline constexpr std::string_view default_source_folder_name{"src"};
+inline constexpr std::string_view default_apps_folder_name{"apps"};
+inline constexpr std::string_view default_include_folder_name{"include"};
+inline constexpr std::string_view config_default_location{
+    ".daemonmake/config.json"};
 
 /**
  * Project configuration loaded from or written to `.daemonmake/config.json`.
@@ -18,15 +19,15 @@ inline constexpr std::string_view config_default_location { ".daemonmake/config.
  * targets are discovered (e.g. src/, include/, apps/).
  */
 struct Config {
-    std::filesystem::path project_root;
-    std::filesystem::path build_directory;
+  std::filesystem::path project_root;
+  std::filesystem::path build_directory;
 
-    std::string compiler;
-    std::string cxx_standard;
-    
-    std::string source_folder_name;
-    std::string include_folder_name;
-    std::string apps_folder_name;
+  std::string compiler;
+  std::string cxx_standard;
+
+  std::string source_folder_name;
+  std::string include_folder_name;
+  std::string apps_folder_name;
 };
 
 /**
@@ -56,7 +57,6 @@ Config load_config(const std::filesystem::path& project_root);
  * std::runtime_error on I/O failure.
  */
 void save_config(const Config& cfg);
-
 
 }  // namespace daemonmake
 
