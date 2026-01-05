@@ -38,9 +38,11 @@ BuildQueue::Task BuildQueue::pop_all_events(const std::stop_token& token) {
     return {};
 
   // For debouncing and trying to group more events
+  const auto debounce_timeout{1000ms};
+
   while (!shutdown_ && !token.stop_requested() && !needs_full_rebuild_) {
     const auto last_push_before_sleep{last_event_pushed_};
-    const auto deadline{last_event_pushed_ + 150ms};
+    const auto deadline{last_event_pushed_ + debounce_timeout};
     cv_not_empty_.wait_until(
         lock, token, deadline, [this, last_push_before_sleep] {
           return shutdown_ || last_event_pushed_ != last_push_before_sleep;

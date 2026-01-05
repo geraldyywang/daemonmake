@@ -148,6 +148,7 @@ int run_daemon(const std::string& root_arg) {
     }
 
     dmon.stop();
+    std::cout << "[daemonmake] daemon shut down.\n";
     return 0;
   } catch (const std::exception& ex) {
     std::cerr << "daemonmake daemon failed: " << ex.what() << '\n';

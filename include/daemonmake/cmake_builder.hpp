@@ -13,11 +13,13 @@ namespace daemonmake {
  * runs a CMake configure step, then builds the project. Returns the exit code
  * from the build command. Does not throw on configuration or build failures.
  *
- * @param cfg Project configuration, including project_root and build_directory.
- * @param pl  Project layout used when generating CMakeLists.txt.
+ * @param cfg       Project configuration, including project_root and build_directory.
+ * @param pl        Project layout used when generating CMakeLists.txt.
+ * @param overwrite Whether to overwrite an existing CMakeLists.txt.
  * @return Exit code of the CMake build command.
  */
-int cmake_build(const Config& cfg, const ProjectLayout& pl);
+int cmake_build(const Config& cfg, const ProjectLayout& pl,
+                bool overwrite = false);
 
 /**
  * Writes a CMakeLists.txt file for the given project configuration and layout.

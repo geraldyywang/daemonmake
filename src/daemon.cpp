@@ -73,14 +73,14 @@ void Daemon::update_pl() {
 
 int Daemon::rebuild_all() {
   update_pl();
-  return cmake_build(cfg_, pl_);
+  return cmake_build(cfg_, pl_, true);
 }
 
 int Daemon::rebuild_changed(BuildQueue::Task& task) {
-  for (const auto& [path, type] : task.events) {
-  }
-
-  return 0;
+  // TODO: Implement target builds for v2 (engage graph_ as well)
+  // for (const auto& [path, type] : task.events) {
+  // }
+  return cmake_build(cfg_, pl_, task.requires_discovery());
 }
 
 }  // namespace daemonmake

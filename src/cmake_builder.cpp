@@ -61,11 +61,13 @@ int run_subprocess(const std::vector<std::string>& argv) {
 
 }  // namespace
 
-int cmake_build(const Config& cfg, const ProjectLayout& pl) {
+int cmake_build(const Config& cfg, const ProjectLayout& pl, bool overwrite) {
   fs::create_directories(cfg.build_directory);
 
   if (!fs::exists(cfg.project_root / "CMakeLists.txt")) {
     write_cmakelists(cfg, pl);
+  } else if (overwrite) {
+    write_cmakelists(cfg, pl, overwrite);
   }
 
   const std::string configure_cmd{"cmake -S " + cfg.project_root.string() +
