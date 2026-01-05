@@ -4,8 +4,6 @@
 #include <iostream>
 #include <unordered_set>
 
-#include "daemonmake/config.hpp"
-
 namespace daemonmake {
 
 namespace fs = std::filesystem;
@@ -46,6 +44,8 @@ ProjectLayout make_project_layout(const std::filesystem::path& project_root) {
 }
 
 void discover_targets(const Config& cfg, ProjectLayout& pl) {
+  pl.targets.clear();
+  
   // If there are files that are not in a subfolder, group them into unnamed
   // target as a lib
   Target files_not_grouped{

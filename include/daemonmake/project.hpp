@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "daemonmake/config.hpp"
+
 namespace daemonmake {
 
 inline constexpr std::string_view default_lib_name{"UnnamedLib"};

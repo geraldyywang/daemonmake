@@ -8,11 +8,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(nlohmann_json REQUIRED CONFIG)
 
 add_library(daemonmake_lib
-    src/config.cpp
-    src/project.cpp
-    src/daemon.cpp
+    src/build_queue.cpp
     src/cmake_builder.cpp
     src/commands.cpp
+    src/config.cpp
+    src/daemon.cpp
+    src/file_watcher.cpp
+    src/project.cpp
 )
 
 target_include_directories(daemonmake_lib

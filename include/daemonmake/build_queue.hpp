@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <mutex>
 #include <stop_token>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "daemonmake/file_watcher.hpp"
@@ -17,7 +17,7 @@ class BuildQueue {
   explicit BuildQueue(size_t capacity);
 
   struct Task {
-    std::unordered_map<std::filesystem::path, FileEventType> events;
+    std::map<std::filesystem::path, FileEventType> events;
     bool full_rebuild{};
 
     bool requires_discovery() const {
@@ -36,7 +36,7 @@ class BuildQueue {
 
  private:
   size_t capacity_;
-  std::unordered_map<std::filesystem::path, FileEventType> events_;
+  std::map<std::filesystem::path, FileEventType> events_ {};
   bool needs_full_rebuild_{};
   std::chrono::steady_clock::time_point last_event_pushed_{};
   bool shutdown_{};

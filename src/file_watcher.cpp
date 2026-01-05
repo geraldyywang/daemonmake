@@ -9,7 +9,7 @@ namespace daemonmake {
 namespace fs = std::filesystem;
 
 FileWatcher::FileWatcher(const std::vector<fs::path>& roots)
-    : roots_{roots}, inotify_fd_{inotify_init()} {
+    : inotify_fd_{inotify_init()}, roots_{roots} {
   if (inotify_fd_ < 0) throw std::runtime_error("Failed to initialize inotify");
 
   for (const auto& root : roots_) {
@@ -30,8 +30,8 @@ FileWatcher::~FileWatcher() {
 }
 
 FileWatcher::FileWatcher(FileWatcher&& other) noexcept
-    : roots_{std::move(other.roots_)},
-      inotify_fd_{std::exchange(other.inotify_fd_, -1)},
+    : inotify_fd_{std::exchange(other.inotify_fd_, -1)},
+      roots_{std::move(other.roots_)},
       wd_to_path_{std::move(other.wd_to_path_)} {}
 
 FileWatcher& FileWatcher::operator=(FileWatcher&& other) noexcept {
