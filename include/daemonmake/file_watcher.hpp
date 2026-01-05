@@ -16,7 +16,7 @@ struct FileEvent {
 
 class FileWatcher {
  public:
-  explicit FileWatcher(const std::filesystem::path& project_root);
+  explicit FileWatcher(const std::vector<std::filesystem::path>& roots);
   ~FileWatcher();
 
   FileWatcher(const FileWatcher&) = delete;
@@ -31,7 +31,7 @@ class FileWatcher {
   void add_watch(const std::filesystem::path& dir);
 
   int inotify_fd_;
-  std::filesystem::path project_root_;
+  std::vector<std::filesystem::path> roots_;
   std::unordered_map<int, std::filesystem::path> wd_to_path_;
 };
 
