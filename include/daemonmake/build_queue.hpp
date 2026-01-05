@@ -2,7 +2,10 @@
 #define DAEMONMAKE__DAEMONMAKE_BUILD_QUEUE
 
 #include <condition_variable>
+#include <filesystem>
 #include <mutex>
+#include <stop_token>
+#include <unordered_map>
 #include <vector>
 
 #include "daemonmake/file_watcher.hpp"
@@ -14,13 +17,12 @@ class BuildQueue {
   explicit BuildQueue(size_t capacity);
 
   struct Task {
-    std::vector<FileEvent> events;
+    std::unordered_map<std::filesystem::path, FileEventType> events;
     bool full_rebuild{};
 
     bool requires_discovery() const {
-      for (const auto& event : events) {
-        if (event.type == FileEventType::Created ||
-            event.type == FileEventType::Deleted)
+      for (const auto& [path, type] : events) {
+        if (type == FileEventType::Created || type == FileEventType::Deleted)
           return true;
       }
 
@@ -29,17 +31,19 @@ class BuildQueue {
   };
 
   void push_event(const FileEvent& event);
-  Task pop_all_events();
+  Task pop_all_events(const std::stop_token& token);
   void shutdown();
 
  private:
   size_t capacity_;
-  std::vector<FileEvent> events_;
+  std::unordered_map<std::filesystem::path, FileEventType> events_;
+  bool needs_full_rebuild_{};
+  std::chrono::steady_clock::time_point last_event_pushed_{};
   bool shutdown_{};
 
   std::mutex mtx_;
-  std::condition_variable cv_not_full_;
-  std::condition_variable cv_not_empty_;
+  std::condition_variable_any cv_not_full_;
+  std::condition_variable_any cv_not_empty_;
 };
 
 }  // namespace daemonmake
