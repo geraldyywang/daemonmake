@@ -1,31 +1,42 @@
 #ifndef DAEMONMAKE__DAEMONMAKE_DAEMON
 #define DAEMONMAKE__DAEMONMAKE_DAEMON
 
+#include <filesystem>
+#include <map>
+#include <mutex>
+#include <thread>
+#include <vector>
+
+#include "daemonmake/build_queue.hpp"
 #include "daemonmake/config.hpp"
 #include "daemonmake/project.hpp"
 
-#include <filesystem>
-#include <vector>
-#include <map>
-
 namespace daemonmake {
 
-class Daemon {
-public:
-    explicit Daemon(const Config& cfg);
-    int run();
-    
-private:
-    void snapshot_timestamps();
-    std::vector<std::filesystem::path> get_changed_files();
-    int rebuild_all();
-    int rebuild_changed();
+inline constexpr ssize_t daemon_build_queue_size{1000};
 
-    Config cfg_;
-    ProjectLayout pl_;
-    std::map<std::filesystem::path, std::filesystem::file_time_type> last_timestamps_;
+class Daemon {
+ public:
+  explicit Daemon(const Config& cfg);
+  ~Daemon();
+  int run();
+  void stop();
+
+ private:
+  void update_pl();
+  int rebuild_all();
+  int rebuild_changed(BuildQueue::Task& task);
+
+  Config cfg_;
+  ProjectLayout pl_;
+  BuildQueue build_queue_;
+  TargetGraph graph_;
+
+  std::mutex mtx_;
+  std::jthread watcher_thread_;
+  std::jthread builder_thread_;
 };
 
-}  //namespace daemonmake
+}  // namespace daemonmake
 
 #endif

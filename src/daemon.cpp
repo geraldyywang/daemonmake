@@ -1,91 +1,86 @@
 #include "daemonmake/daemon.hpp"
 
-#include "daemonmake/cmake_builder.hpp"
-
-#include <iostream>
-#include <thread>
 #include <chrono>
+#include <iostream>
+#include <stop_token>
+#include <thread>
+
+#include "daemonmake/cmake_builder.hpp"
+#include "daemonmake/file_watcher.hpp"
 
 namespace daemonmake {
 
 namespace fs = std::filesystem;
 
-Daemon::Daemon(const Config& cfg) : cfg_ {cfg}, pl_ { make_project_layout(cfg.project_root) } {
-    discover_targets(cfg_, pl_);
-    infer_target_dependencies(pl_);
+Daemon::Daemon(const Config& cfg)
+    : cfg_{cfg},
+      pl_{make_project_layout(cfg.project_root)},
+      build_queue_{daemon_build_queue_size} {
+  update_pl();
 }
+
+Daemon::~Daemon() { stop(); }
 
 int Daemon::run() {
-    snapshot_timestamps();
-    std::cout << "[daemonmake] daemon running. Press Ctrl+C to stop.\n";
-
-    int last_rc {};
-
-    while(true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        // TODO: need to check for new folders/libs added or deleted
-        auto changed { get_changed_files() };
-        if (!changed.empty()) {
-            std::cout << "[daemonmake] Detected " << changed.size() << " changed file(s). Rebuilding...\n";
-            last_rc = rebuild_all();
-        }
+  const auto watcher_loop{[this](const std::stop_token& token) {
+    FileWatcher watcher{{cfg_.project_root / cfg_.include_folder_name,
+                         cfg_.project_root / cfg_.source_folder_name,
+                         cfg_.project_root / cfg_.apps_folder_name}};
+    while (!token.stop_requested()) {
+      auto events{watcher.wait_for_events()};
+      for (const auto& e : events) {
+        build_queue_.push_event(e);
+      }
     }
+  }};
 
-    return last_rc;
+  const auto builder_loop{[this](const std::stop_token& token) {
+    while (!token.stop_requested()) {
+      auto task{build_queue_.pop_all_events(token)};
+      if (task.events.empty() && !task.full_rebuild) continue;
+      if (task.full_rebuild) {
+        std::cout << "[daemonmake] Executing full rebuild...\n";
+        rebuild_all();
+      } else {
+        if (task.requires_discovery()) {
+          update_pl();
+        }
+        std::cout << "[daemonmake] Detected " << task.events.size()
+                  << " changed file(s). Rebuilding...\n";
+        rebuild_changed(task);
+      }
+    }
+  }};
+
+  builder_thread_ = std::jthread{builder_loop};
+  watcher_thread_ = std::jthread{watcher_loop};
+
+  return 0;
 }
 
-void Daemon::snapshot_timestamps() {
-    last_timestamps_.clear();
-
-    auto scan {[&](const fs::path& dir){
-        if (!fs::exists(dir)) return;
-        for (auto& entry : fs::recursive_directory_iterator(dir)) {
-            if (!fs::is_regular_file(entry.path())) continue;
-            last_timestamps_[entry.path()] = fs::last_write_time(entry.path());
-        }
-    }};
-
-    scan(cfg_.project_root / cfg_.source_folder_name);
-    scan(cfg_.project_root / cfg_.include_folder_name);
-    scan(cfg_.project_root / cfg_.apps_folder_name);
+void Daemon::stop() {
+  build_queue_.shutdown();
+  if (watcher_thread_.joinable()) watcher_thread_.request_stop();
+  if (builder_thread_.joinable()) builder_thread_.request_stop();
 }
 
-std::vector<fs::path> Daemon::get_changed_files() {
-    std::vector<fs::path> changed;
-    std::map<fs::path, fs::file_time_type> now;
-
-    auto scan_for_changes {[&](const fs::path& dir){
-        if (!fs::exists(dir)) return;
-        for (auto& entry : fs::recursive_directory_iterator(dir)) {
-            if (!fs::is_regular_file(entry.path())) continue;
-            now[entry.path()] = fs::last_write_time(entry.path());
-        }
-    }};
-
-    scan_for_changes(cfg_.project_root / cfg_.source_folder_name);
-    scan_for_changes(cfg_.project_root / cfg_.include_folder_name);
-    scan_for_changes(cfg_.project_root / cfg_.apps_folder_name);
-
-    for (const auto& [path, ts] : now) {
-        if (last_timestamps_.count(path) == 0 || last_timestamps_[path] != ts) {
-            changed.push_back(path);
-        }
-    }
-
-    last_timestamps_ = std::move(now);
-    return changed;
+void Daemon::update_pl() {
+  std::scoped_lock<std::mutex> lock{mtx_};
+  discover_targets(cfg_, pl_);
+  infer_target_dependencies(pl_);
+  graph_ = TargetGraph{pl_};
 }
 
 int Daemon::rebuild_all() {
-    discover_targets(cfg_, pl_);
-    infer_target_dependencies(pl_);
-    return cmake_build(cfg_, pl_);
+  update_pl();
+  return cmake_build(cfg_, pl_);
 }
 
-int Daemon::rebuild_changed() {
-    // TODO: implement
-    return 0;
+int Daemon::rebuild_changed(BuildQueue::Task& task) {
+  for (const auto& [path, type] : task.events) {
+  }
+
+  return 0;
 }
 
 }  // namespace daemonmake

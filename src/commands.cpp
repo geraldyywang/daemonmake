@@ -1,7 +1,11 @@
 #include "daemonmake/commands.hpp"
 
+#include <atomic>
+#include <chrono>
+#include <csignal>
 #include <filesystem>
 #include <iostream>
+#include <thread>
 
 #include "daemonmake/cmake_builder.hpp"
 #include "daemonmake/config.hpp"
@@ -13,6 +17,9 @@ namespace daemonmake {
 namespace fs = std::filesystem;
 
 namespace {
+
+std::atomic_bool g_stop{false};
+void handle_sigint(int) { g_stop.store(true, std::memory_order_relaxed); }
 
 fs::path resolve_root(const std::string& root_arg) {
   fs::path root{root_arg.empty() ? fs::current_path() : fs::path{root_arg}};
@@ -122,13 +129,26 @@ int run_generate_cmake(const std::string& root_arg) {
 }
 
 int run_daemon(const std::string& root_arg) {
+  using namespace std::chrono_literals;
+
   // Constantly running?
   try {
     fs::path resolved_root{resolve_root(root_arg)};
     Config cfg{load_config(resolved_root)};
 
+    std::signal(SIGINT, handle_sigint);
+
     Daemon dmon{cfg};
-    return dmon.run();
+    // Start background threads
+    dmon.run();
+    std::cout << "[daemonmake] daemon running. Press Ctrl+C to stop.\n";
+
+    while (!g_stop.load(std::memory_order_relaxed)) {
+      std::this_thread::sleep_for(50ms);
+    }
+
+    dmon.stop();
+    return 0;
   } catch (const std::exception& ex) {
     std::cerr << "daemonmake daemon failed: " << ex.what() << '\n';
     return 1;
