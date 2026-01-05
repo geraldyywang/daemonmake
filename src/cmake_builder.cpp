@@ -1,5 +1,9 @@
 #include "daemonmake/cmake_builder.hpp"
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -12,8 +16,6 @@ namespace fs = std::filesystem;
 
 namespace {
 
-// Helper: extract the numeric C++ standard (e.g. "20") from a string like
-// "c++20".
 std::string extract_cxx_standard_number(const std::string& standard) {
   std::string digits;
   for (char ch : standard) {
@@ -29,6 +31,34 @@ std::string extract_cxx_standard_number(const std::string& standard) {
   return digits;
 }
 
+int run_subprocess(const std::vector<std::string>& argv) {
+  if (argv.empty()) return 1;
+
+  std::vector<char*> args;
+  for (auto& arg : argv) {
+    args.push_back(const_cast<char*>(arg.c_str()));
+  }
+  args.push_back(nullptr);
+
+  pid_t pid{::fork()};
+
+  if (pid < 0) {
+    return 1;
+  } else if (pid == 0) {
+    ::execvp(args[0], args.data());
+    ::_exit(127);
+  }
+
+  // Parent
+  int status{};
+  if (waitpid(pid, &status, 0) < 0) {
+    return 1;
+  }
+
+  if (WIFEXITED(status)) return WEXITSTATUS(status);
+  return 1;
+}
+
 }  // namespace
 
 int cmake_build(const Config& cfg, const ProjectLayout& pl) {
@@ -42,7 +72,8 @@ int cmake_build(const Config& cfg, const ProjectLayout& pl) {
                                   " -B " + cfg.build_directory.string()};
 
   std::cout << "[daemonmake] " << configure_cmd << '\n';
-  int rc{std::system(configure_cmd.c_str())};
+  int rc{run_subprocess({"cmake", "-S", cfg.project_root.string(), "-B",
+                         cfg.build_directory.string()})};
   if (rc != 0) {
     std::cerr << "daemonmake build: CMake configuration failed (rc=" << rc
               << ")\n";
@@ -51,7 +82,7 @@ int cmake_build(const Config& cfg, const ProjectLayout& pl) {
   const std::string build_cmd{"cmake --build " + cfg.build_directory.string()};
 
   std::cout << "[daemonmake] " << build_cmd << '\n';
-  rc = std::system(build_cmd.c_str());
+  rc = run_subprocess({"cmake", "--build", cfg.build_directory.string()});
   if (rc != 0) {
     std::cerr << "daemonmake build: CMake build failed (rc=" << rc << ")\n";
   }
@@ -59,6 +90,8 @@ int cmake_build(const Config& cfg, const ProjectLayout& pl) {
   return rc;
 }
 
+// TODO: For future versions, add Conan/vcpkg support or update only specific
+// parts of CMakeLists.txt
 void write_cmakelists(const Config& cfg, const ProjectLayout& pl,
                       bool overwrite) {
   const fs::path cmake_path{cfg.project_root / "CMakeLists.txt"};
