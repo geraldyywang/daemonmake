@@ -160,4 +160,24 @@ void infer_target_dependencies(ProjectLayout& pl) {
   }
 }
 
+TargetGraph::TargetGraph(const ProjectLayout& pl) {
+  TargetId id_counter{};
+
+  for (const auto& target : pl.targets) {
+    target_name_to_id[target.name] = id_counter++;
+  }
+
+  dependencies = std::vector<std::vector<TargetId>>(id_counter);
+  reverse_dependencies = std::vector<std::vector<TargetId>>(id_counter);
+
+  for (const auto& target : pl.targets) {
+    const auto& target_id {target_name_to_id[target.name]};
+    for (const auto& dep_name : target.dependencies) {
+        const auto& dep_id {target_name_to_id[dep_name]};
+        dependencies[target_id].push_back(dep_id);
+        reverse_dependencies[dep_id].push_back(target_id);
+    }
+  }
+}
+
 }  // namespace daemonmake

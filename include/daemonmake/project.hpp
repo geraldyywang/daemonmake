@@ -1,14 +1,15 @@
 #ifndef DAEMONMAKE__DAEMONMAKE_PROJECT
 #define DAEMONMAKE__DAEMONMAKE_PROJECT
 
-#include <vector>
+#include <filesystem>
 #include <string>
 #include <string_view>
-#include <filesystem>
+#include <unordered_map>
+#include <vector>
 
 namespace daemonmake {
 
-inline constexpr std::string_view default_lib_name { "UnnamedLib" };
+inline constexpr std::string_view default_lib_name{"UnnamedLib"};
 
 enum class TargetType { Library, Executable };
 
@@ -17,11 +18,11 @@ enum class TargetType { Library, Executable };
  * Contains its sources, headers, and inferred target dependencies.
  */
 struct Target {
-    std::string name;
-    TargetType type;
-    std::vector<std::string> source_files;
-    std::vector<std::string> header_files;
-    std::vector<std::string> dependencies;
+  std::string name;
+  TargetType type;
+  std::vector<std::string> source_files;
+  std::vector<std::string> header_files;
+  std::vector<std::string> dependencies;
 };
 
 /**
@@ -29,9 +30,20 @@ struct Target {
  * root path, and all discovered build targets.
  */
 struct ProjectLayout {
-    std::string project_name;
-    std::filesystem::path project_root;
-    std::vector<Target> targets;
+  std::string project_name;
+  std::filesystem::path project_root;
+  std::vector<Target> targets;
+};
+
+using TargetId = uint32_t;
+
+struct TargetGraph {
+  std::unordered_map<std::string, TargetId> target_name_to_id;
+  std::vector<std::vector<TargetId>> dependencies;
+  std::vector<std::vector<TargetId>> reverse_dependencies;
+
+  TargetGraph() = default;
+  TargetGraph(const ProjectLayout& pl);
 };
 
 /**
@@ -68,7 +80,7 @@ void discover_targets(const Config& cfg, ProjectLayout& pl);
  * component map to the default library.
  */
 void infer_target_dependencies(ProjectLayout& pl);
-    
+
 }  // namespace daemonmake
 
 #endif
