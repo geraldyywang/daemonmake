@@ -13,11 +13,16 @@ namespace daemonmake {
 
 inline constexpr std::string_view default_lib_name{"UnnamedLib"};
 
+/**
+ * Indicates the build artifact type for a target.
+ */
 enum class TargetType { Library, Executable };
 
 /**
- * Represents a library or executable target discovered in the project.
- * Contains its sources, headers, and inferred target dependencies.
+ * Represents a build artifact discovered in the project.
+ *
+ * Each target groups a set of source and header files. Its dependencies are
+ * discovered through static analysis of include directives.
  */
 struct Target {
   std::string name;
@@ -28,8 +33,7 @@ struct Target {
 };
 
 /**
- * High-level description of a project’s structure, including its name,
- * root path, and all discovered build targets.
+ * A snapshot of the physical and logical structure of the project.
  */
 struct ProjectLayout {
   std::string project_name;
@@ -39,47 +43,52 @@ struct ProjectLayout {
 
 using TargetId = uint32_t;
 
+/**
+ * A directed graph representing the build dependency hierarchy.
+ *
+ * Provides efficient lookups for both direct dependencies (what I need)
+ * and reverse dependencies (who needs me).
+ */
 struct TargetGraph {
   std::unordered_map<std::string, TargetId> target_name_to_id;
   std::vector<std::vector<TargetId>> dependencies;
   std::vector<std::vector<TargetId>> reverse_dependencies;
 
   TargetGraph() = default;
+  /**
+   * Constructs the graph from a fully discovered ProjectLayout.
+   * 
+   * @param pl The layout used to populate nodes and edges.
+   */
   TargetGraph(const ProjectLayout& pl);
 };
 
 /**
- * Initializes a ProjectLayout for the given root. Does not scan the
- * filesystem; call discover_targets() and infer_target_dependencies()
- * afterwards to populate the layout.
+ * Creates a base ProjectLayout for a given root directory.
+ *
+ * @param project_root The absolute path to the project.
+ * @return An initialized layout with name and root path set.
  */
 ProjectLayout make_project_layout(const std::filesystem::path& project_root);
 
 /**
- * Scans the project tree and populates pl.targets.
+ * Scans the filesystem to identify libraries and executables.
  *
- * Libraries:
- *   - One target per subdirectory in <root>/src.
- *   - A fallback "UnnamedLib" target for top-level sources/headers.
+ * Logic:
+ * - Subdirectories in 'src/' become Library targets.
+ * - Files in 'apps/' become individual Executable targets.
+ * - Headers are associated based on <project_name>/<target_name> structure.
  *
- * Executables:
- *   - One target per .cpp file in <root>/apps.
- *
- * Headers:
- *   - Collected from <root>/include/<project>/<target>.
- *
- * Assumes pl.project_root and pl.project_name are already initialized.
+ * @param cfg The project configuration.
+ * @param pl The layout to populate with discovered targets.
  */
 void discover_targets(const Config& cfg, ProjectLayout& pl);
 
 /**
- * Infers inter-target dependencies by parsing #include directives in each
- * target's sources and headers. Matches includes of the form:
+ * Analyzes file contents to find inter-target dependencies.
  *
- *    "<project>/<lib>/...>"
- *
- * and records <lib> as a dependency. Includes without a second path
- * component map to the default library.
+ * Parses #include "project/target/..." strings to map relationships.
+ * @param pl The layout to update with dependency metadata.
  */
 void infer_target_dependencies(ProjectLayout& pl);
 

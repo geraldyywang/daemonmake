@@ -13,10 +13,11 @@ inline constexpr std::string_view config_default_location{
     ".daemonmake/config.json"};
 
 /**
- * Project configuration loaded from or written to `.daemonmake/config.json`.
+ * Project configuration state.
  *
- * Paths are stored as absolute canonical paths. Folder names determine where
- * targets are discovered (e.g. src/, include/, apps/).
+ * This struct represents the persistent settings for a daemonmake project.
+ * All paths are stored as absolute canonical paths to ensure consistency
+ * across different working directories.
  */
 struct Config {
   std::filesystem::path project_root;
@@ -31,30 +32,34 @@ struct Config {
 };
 
 /**
- * Creates a default configuration for the given project root.
+ * Generates a default configuration object for a project root.
  *
- * The root is canonicalized, and default paths/values are populated:
- *   - build directory: <root>/build
- *   - compiler: "g++"
- *   - cxx_standard: "c++20"
- *   - folder names: src/, include/, apps/
+ * Canonicalizes the provided path and sets default values for the compiler
+ * (g++), standard (c++20), and folder structure (src, include, apps).
+ *
+ * @param project_root The base directory of the project.
+ * @return A Config object with default settings.
  */
 Config make_default_config(const std::filesystem::path& project_root);
 
 /**
- * Loads configuration from `<project_root>/.daemonmake/config.json`.
+ * Loads and parses the configuration from the project's JSON config file.
  *
- * Throws std::runtime_error if the file cannot be opened or parsed. The
- * returned Config contains absolute canonical paths and user-customized
- * directory names.
+ * Looks for the config file at <project_root>/.daemonmake/config.json.
+ *
+ * @param project_root The base directory of the project.
+ * @return The parsed Config object.
+ * @throws std::runtime_error If the file is missing or contains invalid JSON.
  */
 Config load_config(const std::filesystem::path& project_root);
 
 /**
- * Serializes the configuration to `<cfg.project_root>/.daemonmake/config.json`.
+ * Persists the configuration to the project's JSON config file.
  *
- * Creates parent directories if needed and overwrites the file. Throws
- * std::runtime_error on I/O failure.
+ * Automatically creates the .daemonmake directory if it does not exist.
+ *
+ * @param cfg The configuration object to save.
+ * @throws std::runtime_error If the file cannot be written.
  */
 void save_config(const Config& cfg);
 
