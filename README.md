@@ -19,9 +19,9 @@ Language: C++20 \
 Platform: Linux \
 Build backend: CMake
 
-`daemonmake` is a lightweight C++ developer tool that removes friction from the edit–build loop by running a foreground daemon that watches source files, coalesces changes, and triggers debounced rebuilds.
+`daemonmake` is a lightweight C++ developer tool that removes friction from the edit–build loop by running a daemon that watches source files, coalesces changes, and triggers debounced rebuilds.
 
-It infers project structure from conventions, generates and builds CMake projects, and runs a foreground daemon that watches files and automatically rebuilds on change using robust debouncing and coalescing. It is intentionally not a build system replacement — it delegates correctness to CMake/Ninja and focuses on iteration speed and developer ergonomics.
+It infers project structure from conventions and builds CMake projects. It is intentionally not a build system replacement — it delegates correctness to CMake/Ninja and focuses on iteration speed and developer ergonomics.
 
 
 ## Background
@@ -111,7 +111,6 @@ Only generates if missing (unless forced).
 
 Run the daemon\
 ```daemonmake daemon```
-- Runs in the foreground
 - Watches src/, include/, apps/
 - Automatically rebuilds on changes
 - Press Ctrl+C to stop cleanly
@@ -148,6 +147,7 @@ project_name/
 
 
 ## Future Work
+- Migrate `daemonmake daemon` to be a background process
 - Building only affected targets and dependents
 - Optional parallel build control
 - Cross-platform filesystem watching
